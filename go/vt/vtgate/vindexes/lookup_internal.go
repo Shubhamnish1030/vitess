@@ -144,6 +144,10 @@ func (lkp *lookupInternal) Lookup(ctx context.Context, vcursor VCursor, ids []sq
 	if vcursor == nil {
 		return nil, vterrors.VT13001("cannot perform lookup: no vcursor provided")
 	}
+	if len(ids) == 0 {
+		// Nothing to look up, e.g. an IN route over an empty list bind variable.
+		return nil, nil
+	}
 	results := make([]*sqltypes.Result, 0, len(ids))
 	if lkp.Autocommit {
 		co = vtgatepb.CommitOrder_AUTOCOMMIT

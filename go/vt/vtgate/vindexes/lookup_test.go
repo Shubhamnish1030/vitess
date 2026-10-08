@@ -857,3 +857,19 @@ func createLookup(t *testing.T, name string, writeOnly bool) SingleColumn {
 	require.Empty(t, l.(ParamValidating).UnknownParams())
 	return l.(SingleColumn)
 }
+
+// TestLookupMapEmptyIDs checks that Map over no ids, as an IN route over an
+// empty list bind variable produces, returns no destinations and runs no lookup
+// query instead of panicking.
+func TestLookupMapEmptyIDs(t *testing.T) {
+	for _, name := range []string{"lookup", "lookup_unique", "lookup_hash", "lookup_hash_unique", "lookup_unicodeloosemd5_hash", "lookup_unicodeloosemd5_hash_unique"} {
+		t.Run(name, func(t *testing.T) {
+			lkp := createLookup(t, name, false /* writeOnly */)
+			vc := &vcursor{numRows: 1}
+			got, err := lkp.Map(t.Context(), vc, []sqltypes.Value{})
+			require.NoError(t, err)
+			assert.Empty(t, got)
+			assert.Empty(t, vc.queries)
+		})
+	}
+}
