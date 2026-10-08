@@ -624,3 +624,18 @@ func makeTestResultLookup(numRows []int) *sqltypes.Result {
 	}
 	return result
 }
+
+// TestConsistentLookupMapEmptyIDs checks that Map over no ids returns no
+// destinations and runs no lookup query instead of panicking.
+func TestConsistentLookupMapEmptyIDs(t *testing.T) {
+	for _, name := range []string{"consistent_lookup", "consistent_lookup_unique"} {
+		t.Run(name, func(t *testing.T) {
+			lkp := createConsistentLookup(t, name, false /* writeOnly */)
+			vc := &loggingVCursor{}
+			got, err := lkp.Map(newTestContext(), vc, []sqltypes.Value{})
+			require.NoError(t, err)
+			assert.Empty(t, got)
+			assert.Empty(t, vc.log)
+		})
+	}
+}
